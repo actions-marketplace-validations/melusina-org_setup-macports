@@ -1,4 +1,4 @@
-version: '2.8.1'
+version: '2.11.5'
 prefix: '/opt/local'
 variants:
   select:
@@ -11,3 +11,5 @@ ports:
     select: [ tcl, universal ]
   - name: gmp
     select: native
+  - name: dbus
+

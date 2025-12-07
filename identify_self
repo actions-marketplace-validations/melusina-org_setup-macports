@@ -13,13 +13,6 @@
 # you should have received as part of this distribution. The terms
 # are also available at https://opensource.org/licenses/MIT
 
-github_owner='macports'
-github_repo='macports-base'
-
-parameterfile='.github/parameters/gha-install-macports.yaml'
-prefix='/opt/local'
-version='2.8.1'
-
 wlog()
 {
     {
@@ -70,7 +63,7 @@ with_group_presentation()
 )
 
 identify_source()
-{
+(
     local head
     git_head()
     (
@@ -80,10 +73,10 @@ identify_source()
     cat <<EOF
 Git HEAD: $(git_head)
 EOF
-}
+)
 
 identify_software()
-{
+(
     yq_version()
     {
 	yq --version | sed -e 's/.*version *//'
@@ -110,7 +103,7 @@ yq: $(yq_version)
 jq: $(jq_version)
 openssl: $(openssl_version)
 EOF
-}
+)
 
 main()
 {

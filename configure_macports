@@ -23,7 +23,8 @@
 github_owner='macports'
 github_repo='macports-base'
 
-parameterfile='.github/parameters/gha-install-macports.yaml'
+parameterfile='.github/parameters/setup-macports.yaml'
+parameterfile_compat='.github/parameters/gha-install-macports.yaml'
 
 usage()
 {
@@ -31,8 +32,8 @@ usage()
 	wlog 'Failure' "$@"
     fi
     cat 1>&2 <<'EOF'
-Usage: install_macports [VERSION-OR-PATHNAME]
- Install MacPorts
+Usage: configure_macports [VERSION-OR-PATHNAME]
+ Configure MacPorts
 EOF
     exit 64
 }
@@ -44,7 +45,7 @@ experimental()
 
 cache_key()
 {
-    openssl ripemd160 "${macports_prefix}/etc/gha-install-macports.yaml"\
+    openssl ripemd160 "${macports_prefix}/etc/setup-macports.yaml"\
 	| awk -v "macos=${macos}" '{print(macos "-" $2)}'
 }
 
@@ -87,6 +88,9 @@ main()
 		parameterfile="$1"
 	    elif [ "$1" = ':no-value' -a -f "${parameterfile}" -a -r "${parameterfile}" ]; then
 		wlog 'Info' 'Use parameter file \047%s\047.' "${parameterfile}"
+	    elif [ "$1" = ':no-value' -a -f "${parameterfile_compat}" -a -r "${parameterfile_compat}" ]; then
+		wlog 'Info' 'Use parameter file \047%s\047.' "${parameterfile_compat}"
+		parameterfile="${parameterfile_compat}"
 	    else
 		parameterfile=':no-value'
 	    fi
@@ -97,8 +101,8 @@ main()
     esac
 
     if [ -f "${parameterfile}" -a -r "${parameterfile}" ]; then
-	version=$(yq ".version // \"${macports_version}\"" < "${parameterfile}")
-	prefix=$(yq ".prefix // \"${macports_prefix}\"" < "${parameterfile}")
+	macports_version=$(yq ".version // \"${macports_version}\"" < "${parameterfile}")
+	macports_prefix=$(yq ".prefix // \"${macports_prefix}\"" < "${parameterfile}")
     fi
 
     if [ "${action}" = 'experimental' ]; then
@@ -108,14 +112,14 @@ main()
 
     setup_path
     sudo install -d -o $(id -u -n) -g $(id -g -n) -m 755 "${macports_prefix}"
-    write_configuration "${parameterfile}" "${macports_prefix}/etc/gha-install-macports.yaml"
-    write_variants "${macports_prefix}/etc/gha-install-macports.yaml"
-    write_sources "${macports_prefix}/etc/gha-install-macports.yaml"
+    write_configuration "${parameterfile}" "${macports_prefix}/etc/setup-macports.yaml"
+    write_variants "${macports_prefix}/etc/setup-macports.yaml"
+    write_sources "${macports_prefix}/etc/setup-macports.yaml"
 
     if [ "${GITHUB_ACTIONS}" = 'true' ]; then
 	{
 	    printf 'prefix=%s\n' "${macports_prefix}"
-	    printf 'parameters=%s\n' "${macports_prefix}/etc/gha-install-macports.yaml"
+	    printf 'parameters=%s\n' "${macports_prefix}/etc/setup-macports.yaml"
 	    printf 'cache-key=%sn\n' "$(cache_key)"
             printf 'package=%s\n' "$(make_package)"
             printf 'version=%s\n' "${macports_version}"
